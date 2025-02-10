@@ -7,6 +7,7 @@ from typing import ClassVar, Dict, List, Optional, Union
 import cloudscraper
 
 from pipecraft.extractors.base import BaseExtractor
+from pipecraft.logger.default import get_default_logger
 
 
 class WebExtractor(BaseExtractor):
@@ -28,10 +29,13 @@ class WebExtractor(BaseExtractor):
         cookies: Union[Dict, str, None] = None,
         delay_between_requests: float = 1.0,
         max_retries: int = 3,
+        logger = None,
         **kwargs,
     ):
         super().__init__(source_name)
+        self.logger = logger or get_default_logger()
         self.url_template = Template(url_template)
+        
         self.headers = headers or {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
@@ -63,7 +67,7 @@ class WebExtractor(BaseExtractor):
                 results.append(result)
                 time.sleep(self.delay)
             except Exception as e:
-                logging.error(f"Failed to extract {params}: {str(e)}")
+                self.logger.error(f"Failed to extract {params}: {str(e)}")
                 if len(results) < self.max_retries:
                     time.sleep(self.delay * 2)
                     continue
